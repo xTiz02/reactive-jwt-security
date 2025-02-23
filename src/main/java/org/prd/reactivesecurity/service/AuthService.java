@@ -8,5 +8,7 @@ import reactor.core.publisher.Mono;
 public interface AuthService {
     Mono<AuthenticationResponse> login(AuthenticationRequest authenticationRequest);
     Mono<UserDto> register(UserDto userDto);
+     Mono<AuthenticationResponse> refreshAccessToken(String refreshToken);
+    Mono<AuthenticationResponse> createRefreshToken(String rf);
 
 }

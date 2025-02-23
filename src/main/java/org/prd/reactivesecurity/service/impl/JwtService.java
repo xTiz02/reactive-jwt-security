@@ -28,13 +28,42 @@ public class JwtService {
 
 
     public String generateToken(UserDetails userDetails) {
+
+        Date issuedAt = new Date(System.currentTimeMillis());
+        Date expiration = new Date(issuedAt.getTime() + this.expiration);
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("roles", userDetails.getAuthorities())
-                .issuedAt(new Date())
-                .expiration(new Date(new Date().getTime() + expiration))
+                .issuedAt(issuedAt)
+                .expiration(expiration)
                 .signWith(getKey(secret))
                 .compact();
+    }
+
+    public String generateRefreshToken(UserDetails userDetails, Date issuedAt) {
+        Date expiration = new Date(issuedAt.getTime() + this.expiration * 2);
+
+        return Jwts.builder()
+                .header().type("JWT").and()
+                .subject(userDetails.getUsername())
+                .issuedAt(issuedAt)
+                .expiration(expiration)
+                .id(UUID.randomUUID().toString())
+                .claims(
+                        Map.of("type_token", "refresh")
+                )
+                .signWith(getKey(secret), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public RefreshToken rfJwtToRefreshToken(String refresh) {
+        Claims claims = getClaims(refresh);
+        return RefreshToken.builder()
+                .jti(claims.getId())
+                .expiresAt(claims.getExpiration())
+                .createdAt(claims.getIssuedAt())
+                .token(refresh)
+                .build();
     }
 
     public Claims getClaims(String token) {
@@ -52,6 +81,24 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public Date getIssuedAt(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey(secret))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getIssuedAt();
+    }
+
+    public String extractJti(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey(secret))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getId();
     }
 
     public boolean validate(String token){

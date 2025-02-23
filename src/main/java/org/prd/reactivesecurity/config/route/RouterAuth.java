@@ -18,6 +18,8 @@ public class RouterAuth {
                 .GET("hello", authHandler::hello)
                 .POST(PATH + "signup", authHandler::signUp)
                 .POST(PATH + "login", authHandler::logIn)
+                .GET(PATH + "refresh-token", authHandler::generateAccessToken)
+                .GET(PATH + "refresh-token/new", authHandler::createRefreshToken)
                 .build();
     }
 }

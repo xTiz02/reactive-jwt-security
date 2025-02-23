@@ -19,7 +19,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
-        return null;
+        return Mono.empty();
     }
 
     @Override

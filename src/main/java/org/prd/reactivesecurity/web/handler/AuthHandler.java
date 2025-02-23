@@ -22,25 +22,41 @@ public class AuthHandler {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     public Mono<ServerResponse> hello(ServerRequest request) {
-
         return ServerResponse.ok()
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(Mono.just("Hello"), String.class);
     }
 
     public Mono<ServerResponse> signUp(ServerRequest request) {
-
         return request.bodyToMono(UserDto.class)
                 .flatMap(dto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(authService.register(dto), UserDto.class));
+                        .body(authService.register(dto), UserDto.class))
+                .onErrorResume(e -> ServerResponse.badRequest().body(Mono.just(e.getMessage()), String.class));
     }
 
     public Mono<ServerResponse> logIn(ServerRequest request) {
-
         return request.bodyToMono(AuthenticationRequest.class)
                 .flatMap(dto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(authService.login(dto), AuthenticationResponse.class));
+                        .body(authService.login(dto), AuthenticationResponse.class))
+                .onErrorResume(e -> ServerResponse.badRequest().body(Mono.just(e.getMessage()), String.class));
     }
+
+    public Mono<ServerResponse> generateAccessToken(ServerRequest request) {
+        String refreshToken = request.queryParam("refresh-token").orElse("");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(authService.refreshAccessToken(refreshToken), AuthenticationResponse.class)
+                .onErrorResume(e -> ServerResponse.badRequest().body(Mono.just(e.getMessage()), String.class));
+    }
+
+    public Mono<ServerResponse> createRefreshToken(ServerRequest request) {
+        String refreshToken = request.queryParam("refresh-token").orElse("");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(authService.createRefreshToken(refreshToken), AuthenticationResponse.class)
+                .onErrorResume(e -> ServerResponse.badRequest().body(Mono.just(e.getMessage()), String.class));
+    }
+
 }
